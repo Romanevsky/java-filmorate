@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,6 +14,7 @@ class UserControllerTest {
 
     private final UserController userController = new UserController();
 
+    @DisplayName("Тест валидации пользователя")
     @Test
     void testValidUser() {
         User user = new User();
@@ -24,6 +26,7 @@ class UserControllerTest {
         assertDoesNotThrow(() -> userController.validateUser(user));
     }
 
+    @DisplayName("Тест валидации пользователя с невалидным email")
     @Test
     void testInvalidEmail() {
         User user = new User();
@@ -33,6 +36,7 @@ class UserControllerTest {
         assertThrows(ValidationException.class, () -> userController.validateUser(user));
     }
 
+    @DisplayName("Тест валидации пользователя с пустым логином")
     @Test
     void testEmptyLogin() {
         User user = new User();
@@ -42,6 +46,7 @@ class UserControllerTest {
         assertThrows(ValidationException.class, () -> userController.validateUser(user));
     }
 
+    @DisplayName("Тест валидации пользователя с логином, содержащим пробел")
     @Test
     void testLoginWithSpace() {
         User user = new User();
@@ -51,6 +56,7 @@ class UserControllerTest {
         assertThrows(ValidationException.class, () -> userController.validateUser(user));
     }
 
+    @DisplayName("Тест валидации пользователя с датой рождения в будущем")
     @Test
     void testFutureBirthday() {
         User user = new User();
@@ -61,6 +67,7 @@ class UserControllerTest {
         assertThrows(ValidationException.class, () -> userController.validateUser(user));
     }
 
+    @DisplayName("Тест валидации пользователя с пустым именем")
     @Test
     void testEmptyName() {
         User user = new User();

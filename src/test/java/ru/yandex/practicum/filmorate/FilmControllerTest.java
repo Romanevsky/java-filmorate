@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,6 +14,7 @@ class FilmControllerTest {
 
     private final FilmController filmController = new FilmController();
 
+    @DisplayName("Тест создания фильма")
     @Test
     void testValidFilm() {
         Film film = new Film();
@@ -24,6 +26,7 @@ class FilmControllerTest {
         assertDoesNotThrow(() -> filmController.validateFilm(film));
     }
 
+    @DisplayName("Тест создания фильма с пустым названием")
     @Test
     void testEmptyName() {
         Film film = new Film();
@@ -32,6 +35,7 @@ class FilmControllerTest {
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
 
+    @DisplayName("Тест создания фильма с слишком длинным описанием")
     @Test
     void testLongDescription() {
         Film film = new Film();
@@ -41,6 +45,7 @@ class FilmControllerTest {
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
 
+    @DisplayName("Тест создания фильма с неверной датой релиза")
     @Test
     void testInvalidReleaseDate() {
         Film film = new Film();
@@ -50,6 +55,7 @@ class FilmControllerTest {
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
 
+    @DisplayName("Тест создания фильма с отрицательной продолжительностью")
     @Test
     void testNegativeDuration() {
         Film film = new Film();
