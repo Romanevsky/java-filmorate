@@ -12,12 +12,15 @@ import java.time.LocalDate;
 @Data
 public class User {
     private int id;
-    @NotBlank
-    @Email
-    private String email;
-    @NotBlank
-    private String login;
-    private String name;
-    private LocalDate birthday;
 
+    @NotBlank(message = "Email не может быть пустым.")
+    @Email(message = "Email должен быть валидным адресом электронной почты.")
+    private String email;
+
+    @NotBlank(message = "Логин не может быть пустым.")
+    private String login;
+
+    private String name;
+
+    private LocalDate birthday;
 }
