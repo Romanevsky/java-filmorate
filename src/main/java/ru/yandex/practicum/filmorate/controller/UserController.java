@@ -26,7 +26,13 @@ public class UserController {
         this.userService = userService;
     }
 
-    public void validateUser(@Valid @RequestBody User user) throws ValidationException {
+    public void validateUser(User user) throws ValidationException {
+        if (user == null) {
+            throw new ValidationException("Пользователь не может быть null.");
+        }
+        if (user.getEmail() == null || !user.getEmail().matches(".+@.+\\..+")) {
+            throw new ValidationException("Email должен быть валидным адресом электронной почты.");
+        }
         if (user.getLogin() == null || user.getLogin().trim().isEmpty() || user.getLogin().contains(" ")) {
             throw new ValidationException("Логин не может быть пустым или содержать пробелы.");
         }
