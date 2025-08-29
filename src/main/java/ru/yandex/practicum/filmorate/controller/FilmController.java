@@ -8,15 +8,14 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-@Slf4j
 @RestController
 @RequestMapping("/films")
+@Slf4j
 public class FilmController {
     private final FilmService filmService;
 
@@ -69,7 +68,7 @@ public class FilmController {
     }
 
     @GetMapping
-    public List<Film> getAllFilms() {
+    public List getAllFilms() {
         return filmService.getAllFilms();
     }
 
@@ -103,7 +102,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+    public List getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
         return filmService.getTopFilms(count);
     }
 }

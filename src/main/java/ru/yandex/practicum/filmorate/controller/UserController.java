@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
+@Slf4j
 public class UserController {
     private final UserService userService;
 
