@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import ru.yandex.practicum.filmorate.model.Film;
 import org.springframework.stereotype.Component;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
@@ -62,6 +63,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                     return Integer.compare(likes2, likes1);
                 })
                 .limit(count)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 }

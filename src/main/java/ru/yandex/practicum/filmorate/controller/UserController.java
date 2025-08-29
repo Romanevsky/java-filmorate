@@ -57,7 +57,7 @@ public class UserController {
     @PutMapping
     public ResponseEntity<?> updateUser(@Valid @RequestBody User updatedUser) {
         try {
-            validateUser(updatedUser); // Валидация перед обновлением
+            validateUser(updatedUser);
             User updated = userService.updateUser(updatedUser);
             log.info("Пользователь обновлён: {}", updated);
             return ResponseEntity.ok(updated);
