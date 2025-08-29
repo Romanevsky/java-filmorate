@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -28,15 +27,12 @@ public class FilmController {
         if (film.getName() == null || film.getName().trim().isEmpty()) {
             throw new ValidationException("Название фильма не может быть пустым.");
         }
-
         if (film.getDescription() != null && film.getDescription().length() > 200) {
             throw new ValidationException("Описание не должно превышать 200 символов.");
         }
-
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("Дата релиза должна быть не ранее 28 декабря 1895 года.");
         }
-
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность должна быть положительной.");
         }
@@ -44,17 +40,14 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<?> createFilm(@Valid @RequestBody Film film) {
-        if (filmService == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Сервис не инициализирован."));
-        }
-
         try {
             validateFilm(film);
             Film createdFilm = filmService.createFilm(film);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
         } catch (ValidationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Произошла внутренняя ошибка сервера"));
         }
     }
 
@@ -69,11 +62,13 @@ public class FilmController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Произошла внутренняя ошибка сервера"));
         }
     }
 
     @GetMapping
-    public List<Film> getAllFilms() {
+    public List getAllFilms() {
         return filmService.getAllFilms();
     }
 
@@ -84,18 +79,30 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public ResponseEntity<?> addLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.addLike(id, userId);
-        return ResponseEntity.ok().build();
+        try {
+            filmService.addLike(id, userId);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Произошла внутренняя ошибка сервера"));
+        }
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public ResponseEntity<?> removeLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.removeLike(id, userId);
-        return ResponseEntity.ok().build();
+        try {
+            filmService.removeLike(id, userId);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Произошла внутренняя ошибка сервера"));
+        }
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+    public List getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
         return filmService.getTopFilms(count);
     }
 }
