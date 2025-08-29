@@ -43,7 +43,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
         try {
-            validateUser(user); // Валидация перед созданием
+            validateUser(user);
             User createdUser = userService.createUser(user);
             log.info("Пользователь создан: {}", createdUser);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);

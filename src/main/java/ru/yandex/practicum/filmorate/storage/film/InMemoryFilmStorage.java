@@ -2,9 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
 import org.springframework.stereotype.Component;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
@@ -41,20 +39,29 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(int filmId, int userId) {
+        if (!films.containsKey(filmId)) {
+            throw new NoSuchElementException("Фильм с ID " + filmId + " не найден");
+        }
         likes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
     }
 
     @Override
     public void removeLike(int filmId, int userId) {
+        if (!films.containsKey(filmId)) {
+            throw new NoSuchElementException("Фильм с ID " + filmId + " не найден");
+        }
         likes.getOrDefault(filmId, new HashSet<>()).remove(userId);
     }
 
     @Override
     public List<Film> getTopFilms(int count) {
         return films.values().stream()
-                .sorted(Comparator.comparingInt((Film f) -> likes.getOrDefault(f.getId(), new HashSet<>()).size())
-                        .reversed())
+                .sorted((f1, f2) -> {
+                    int likes1 = likes.getOrDefault(f1.getId(), new HashSet<>()).size();
+                    int likes2 = likes.getOrDefault(f2.getId(), new HashSet<>()).size();
+                    return Integer.compare(likes2, likes1);
+                })
                 .limit(count)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 }
