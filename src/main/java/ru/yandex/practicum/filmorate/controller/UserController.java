@@ -7,95 +7,97 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-/**
- * Контроллер для работы с пользователями.
- */
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private final UserService userService;
 
-    private final Map<Integer, User> users = new HashMap<>();
-    private int nextId = 1;
-
-    /**
-     * Создание пользователя.
-     *
-     * @param user объект пользователя
-     * @return ResponseEntity<User> или ResponseEntity<Error>
-     */
-    @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        try {
-            validateUser(user);
-            user.setId(nextId++);
-            users.put(user.getId(), user);
-            log.info("Пользователь создан: {}", user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    /**
-     * Обновление пользователя.
-     *
-     * @param updatedUser обновлённый пользователь
-     * @return ResponseEntity<User> или ResponseEntity<Error>
-     */
-    @PutMapping
-    public ResponseEntity<?> updateUser(@Valid @RequestBody User updatedUser) {
-        try {
-            validateUser(updatedUser);
-            if (users.containsKey(updatedUser.getId())) {
-                users.put(updatedUser.getId(), updatedUser);
-                log.info("Пользователь обновлён: {}", updatedUser);
-                return ResponseEntity.ok(updatedUser);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Пользователь не найден"));
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public UserController() {
+        this.userService = null; // или мок-объект
     }
 
-    /**
-     * Получение всех пользователей.
-     *
-     * @return список всех пользователей
-     */
-    @GetMapping
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
-    }
-
-    /**
-     * Валидация данных пользователя.
-     *
-     * @param user объект пользователя
-     * @throws ValidationException если данные невалидны
-     */
-    public void validateUser(User user) {
-        if (user.getEmail() == null || !user.getEmail().contains("@")) {
-            throw new ValidationException("Email должен быть валидным и содержать символ '@'.");
+    public void validateUser(User user) throws ValidationException {
+        if (user.getEmail() == null || !user.getEmail().matches(".+@.+\\..+")) {
+            throw new ValidationException("Email должен быть валидным адресом электронной почты.");
         }
-
         if (user.getLogin() == null || user.getLogin().trim().isEmpty() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы.");
+            throw new ValidationException("Логин не может быть пустым или содержать пробелы.");
         }
-
-        if (user.getName() == null || user.getName().trim().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем.");
         }
+        if (user.getName() == null || user.getName().trim().isEmpty()) {
+            user.setName(user.getLogin());
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
+        try {
+            validateUser(user); // Валидация перед созданием
+            User createdUser = userService.createUser(user);
+            log.info("Пользователь создан: {}", createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateUser(@Valid @RequestBody User updatedUser) {
+        try {
+            validateUser(updatedUser); // Валидация перед обновлением
+            User updated = userService.updateUser(updatedUser);
+            log.info("Пользователь обновлён: {}", updated);
+            return ResponseEntity.ok(updated);
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) {
+        return userService.getUserById(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<?> addFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.addFriend(id, friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<?> removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.removeFriend(id, friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 }

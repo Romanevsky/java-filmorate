@@ -7,96 +7,95 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-/**
- * Контроллер для работы с фильмами.
- */
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
+    private final FilmService filmService;
 
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int nextId = 1;
-
-    /**
-     * Создание нового фильма.
-     *
-     * @param film объект фильма
-     * @return ResponseEntity<Film> или ResponseEntity<Error>
-     */
-    @PostMapping
-    public ResponseEntity<?> createFilm(@Valid @RequestBody Film film) {
-        try {
-            validateFilm(film);
-            film.setId(nextId++);
-            films.put(film.getId(), film);
-            log.info("Фильм создан: {}", film);
-            return ResponseEntity.status(HttpStatus.CREATED).body(film);
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
     }
 
-    /**
-     * Обновление фильма.
-     *
-     * @param updatedFilm обновлённый фильм
-     * @return ResponseEntity<Film> или ResponseEntity<Error>
-     */
-    @PutMapping
-    public ResponseEntity<?> updateFilm(@Valid @RequestBody Film updatedFilm) {
-        try {
-            validateFilm(updatedFilm);
-            if (films.containsKey(updatedFilm.getId())) {
-                films.put(updatedFilm.getId(), updatedFilm);
-                log.info("Фильм обновлён: {}", updatedFilm);
-                return ResponseEntity.ok(updatedFilm);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Фильм не найден"));
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+    public FilmController() {
+        this.filmService = null;
     }
 
-    /**
-     * Получение всех фильмов.
-     *
-     * @return список всех фильмов
-     */
-    @GetMapping
-    public List<Film> getAllFilms() {
-        return new ArrayList<>(films.values());
-    }
-
-    /**
-     * Валидация данных фильма.
-     *
-     * @param film объект фильма
-     * @throws ValidationException если данные невалидны
-     */
-    public void validateFilm(Film film) {
+    public void validateFilm(Film film) throws ValidationException {
         if (film.getName() == null || film.getName().trim().isEmpty()) {
             throw new ValidationException("Название фильма не может быть пустым.");
         }
 
         if (film.getDescription() != null && film.getDescription().length() > 200) {
-            throw new ValidationException("Описание фильма не должно превышать 200 символов.");
+            throw new ValidationException("Описание не должно превышать 200 символов.");
         }
 
-        LocalDate earliestDate = LocalDate.of(1895, 12, 28);
-        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(earliestDate)) {
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года.");
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза должна быть не ранее 28 декабря 1895 года.");
         }
 
         if (film.getDuration() <= 0) {
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом.");
+            throw new ValidationException("Продолжительность должна быть положительной.");
         }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createFilm(@Valid @RequestBody Film film) {
+        try {
+            validateFilm(film); // Валидация перед созданием
+            Film createdFilm = filmService.createFilm(film);
+            log.info("Фильм создан: {}", createdFilm);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateFilm(@Valid @RequestBody Film updatedFilm) {
+        try {
+            validateFilm(updatedFilm); // Валидация перед обновлением
+            Film updated = filmService.updateFilm(updatedFilm);
+            log.info("Фильм обновлён: {}", updated);
+            return ResponseEntity.ok(updated);
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public List<Film> getAllFilms() {
+        return filmService.getAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable int id) {
+        return filmService.getFilmById(id);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public ResponseEntity<?> addLike(@PathVariable int id, @PathVariable int userId) {
+        filmService.addLike(id, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public ResponseEntity<?> removeLike(@PathVariable int id, @PathVariable int userId) {
+        filmService.removeLike(id, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+        return filmService.getTopFilms(count);
     }
 }

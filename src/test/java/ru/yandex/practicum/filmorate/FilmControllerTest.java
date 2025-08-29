@@ -31,6 +31,9 @@ class FilmControllerTest {
     void testEmptyName() {
         Film film = new Film();
         film.setName("");
+        film.setDescription("Краткое описание");
+        film.setReleaseDate(LocalDate.of(1900, 1, 1));
+        film.setDuration(120);
 
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
@@ -41,6 +44,8 @@ class FilmControllerTest {
         Film film = new Film();
         film.setName("Фильм");
         film.setDescription("A".repeat(201));
+        film.setReleaseDate(LocalDate.of(1900, 1, 1));
+        film.setDuration(120);
 
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
@@ -50,7 +55,9 @@ class FilmControllerTest {
     void testInvalidReleaseDate() {
         Film film = new Film();
         film.setName("Фильм");
+        film.setDescription("Краткое описание");
         film.setReleaseDate(LocalDate.of(1894, 12, 28));
+        film.setDuration(120);
 
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
     }
@@ -60,6 +67,8 @@ class FilmControllerTest {
     void testNegativeDuration() {
         Film film = new Film();
         film.setName("Фильм");
+        film.setDescription("Краткое описание");
+        film.setReleaseDate(LocalDate.of(1900, 1, 1));
         film.setDuration(-10);
 
         assertThrows(ValidationException.class, () -> filmController.validateFilm(film));
