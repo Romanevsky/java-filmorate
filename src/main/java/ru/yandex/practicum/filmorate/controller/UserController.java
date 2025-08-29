@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,9 @@ public class UserController {
     }
 
     public void validateUser(User user) throws ValidationException {
+        if (user == null) {
+            throw new ValidationException("Пользователь не может быть null.");
+        }
         if (user.getEmail() == null || !user.getEmail().matches(".+@.+\\..+")) {
             throw new ValidationException("Email должен быть валидным адресом электронной почты.");
         }
@@ -43,6 +47,9 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
         try {
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Пользователь не может быть null."));
+            }
             validateUser(user);
             User createdUser = userService.createUser(user);
             log.info("Пользователь создан: {}", createdUser);
