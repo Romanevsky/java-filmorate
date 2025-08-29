@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -10,11 +12,13 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class FilmControllerTest {
 
-    private final FilmController filmController = new FilmController();
+    @Autowired
+    private FilmController filmController;
 
-    @DisplayName("Тест создания фильма")
+    @DisplayName("Тест валидации фильма")
     @Test
     void testValidFilm() {
         Film film = new Film();

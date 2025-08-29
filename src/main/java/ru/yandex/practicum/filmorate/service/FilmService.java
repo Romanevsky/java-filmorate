@@ -14,6 +14,9 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
     public Film createFilm(Film film) {
+        if (filmStorage == null) {
+            throw new IllegalStateException("FilmStorage не инициализирован.");
+        }
         return filmStorage.create(film);
     }
 

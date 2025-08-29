@@ -24,10 +24,6 @@ public class FilmController {
         this.filmService = filmService;
     }
 
-    public FilmController() {
-        this.filmService = null;
-    }
-
     public void validateFilm(Film film) throws ValidationException {
         if (film.getName() == null || film.getName().trim().isEmpty()) {
             throw new ValidationException("Название фильма не может быть пустым.");
@@ -48,10 +44,14 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<?> createFilm(@Valid @RequestBody Film film) {
+        if (filmService == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Сервис не инициализирован."));
+        }
+
         try {
-            validateFilm(film); // Валидация перед созданием
+            validateFilm(film);
             Film createdFilm = filmService.createFilm(film);
-            log.info("Фильм создан: {}", createdFilm);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
         } catch (ValidationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
