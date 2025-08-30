@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,17 +43,15 @@ public class InMemoryUserStorage implements UserStorage {
         if (!users.containsKey(userId) || !users.containsKey(friendId)) {
             throw new NoSuchElementException("Пользователь не найден");
         }
-
         friends.get(userId).add(friendId);
         friends.get(friendId).add(userId);
     }
 
     @Override
     public void removeFriend(int userId, int friendId) {
-        if (!friends.containsKey(userId) || !friends.get(userId).contains(friendId)) {
-            throw new NoSuchElementException("Друг не найден");
+        if (!users.containsKey(userId) || !users.containsKey(friendId)) {
+            throw new NoSuchElementException("Пользователь не найден");
         }
-
         friends.get(userId).remove(friendId);
         friends.get(friendId).remove(userId);
     }
@@ -64,7 +61,6 @@ public class InMemoryUserStorage implements UserStorage {
         if (!friends.containsKey(userId)) {
             return Collections.emptyList();
         }
-
         return friends.get(userId).stream()
                 .map(users::get)
                 .filter(Objects::nonNull)
@@ -73,13 +69,11 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(int userId, int otherId) {
-        if (!friends.containsKey(userId) || !friends.containsKey(otherId)) {
+        if (!users.containsKey(userId) || !users.containsKey(otherId)) {
             return Collections.emptyList();
         }
-
         Set<Integer> commonFriends = new HashSet<>(friends.get(userId));
         commonFriends.retainAll(friends.get(otherId));
-
         return commonFriends.stream()
                 .map(users::get)
                 .filter(Objects::nonNull)

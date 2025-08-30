@@ -44,7 +44,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(filmId)) {
             throw new NoSuchElementException("Фильм с ID " + filmId + " не найден");
         }
-
+        if (userId <= 0) {
+            throw new NoSuchElementException("Пользователь с ID " + userId + " не найден");
+        }
         likes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
     }
 
@@ -53,7 +55,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!likes.containsKey(filmId)) {
             throw new NoSuchElementException("Фильм с ID " + filmId + " не найден");
         }
-
+        if (userId <= 0) {
+            throw new NoSuchElementException("Пользователь с ID " + userId + " не найден");
+        }
         likes.get(filmId).remove(userId);
     }
 
