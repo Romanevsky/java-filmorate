@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,9 @@ public class InMemoryUserStorage implements UserStorage {
     public void removeFriend(int userId, int friendId) {
         if (!users.containsKey(userId) || !users.containsKey(friendId)) {
             throw new NoSuchElementException("Пользователь не найден");
+        }
+        if (!friends.get(userId).contains(friendId)) {
+            throw new NoSuchElementException("Пользователь " + friendId + " не является другом пользователя " + userId);
         }
         friends.get(userId).remove(friendId);
         friends.get(friendId).remove(userId);
