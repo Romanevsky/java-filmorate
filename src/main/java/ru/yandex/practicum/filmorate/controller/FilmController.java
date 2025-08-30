@@ -61,7 +61,8 @@ public class FilmController {
             filmService.addLike(id, userId);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -71,7 +72,8 @@ public class FilmController {
             filmService.removeLike(id, userId);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
