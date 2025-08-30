@@ -28,20 +28,18 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность должна быть положительной.");
         }
+
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
         Film existingFilm = getById(film.getId());
-        if (existingFilm == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
         return filmStorage.update(film);
     }
 
     public Film getById(int id) {
         return filmStorage.getById(id)
-                .orElse(null); // Возвращаем null вместо исключения
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
     }
 
     public List<Film> getAll() {
@@ -49,18 +47,11 @@ public class FilmService {
     }
 
     public void addLike(int filmId, int userId) {
-        Film film = getById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
         filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(int filmId, int userId) {
-        Film film = getById(filmId);
-        if (film != null) {
-            filmStorage.removeLike(filmId, userId);
-        }
+        filmStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getPopular(int count) {
