@@ -59,10 +59,9 @@ public class FilmService {
 
     public void removeLike(int filmId, int userId) {
         Film film = getById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден");
+        if (film != null) {
+            filmStorage.removeLike(filmId, userId);
         }
-        filmStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getPopular(int count) {
