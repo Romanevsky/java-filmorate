@@ -2,17 +2,21 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class UserControllerTest {
-
-    private final UserController userController = new UserController();
+    private final UserController userController = new UserController(new UserService(new InMemoryUserStorage()));
 
     @DisplayName("Тест валидации пользователя")
     @Test
@@ -22,8 +26,8 @@ class UserControllerTest {
         user.setLogin("login");
         user.setName("Имя");
         user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        assertDoesNotThrow(() -> userController.validateUser(user));
+        ResponseEntity<?> response = userController.createUser(user);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @DisplayName("Тест валидации пользователя с невалидным email")
@@ -32,8 +36,9 @@ class UserControllerTest {
         User user = new User();
         user.setEmail("invalid-email");
         user.setLogin("login");
-
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        ResponseEntity<?> response = userController.createUser(user);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(((Map<String, String>) response.getBody()).get("error"));
     }
 
     @DisplayName("Тест валидации пользователя с пустым логином")
@@ -42,8 +47,9 @@ class UserControllerTest {
         User user = new User();
         user.setEmail("user@example.com");
         user.setLogin(""); // или null
-
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        ResponseEntity<?> response = userController.createUser(user);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(((Map<String, String>) response.getBody()).get("error"));
     }
 
     @DisplayName("Тест валидации пользователя с логином, содержащим пробел")
@@ -52,8 +58,9 @@ class UserControllerTest {
         User user = new User();
         user.setEmail("user@example.com");
         user.setLogin("log in"); // содержит пробел
-
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        ResponseEntity<?> response = userController.createUser(user);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(((Map<String, String>) response.getBody()).get("error"));
     }
 
     @DisplayName("Тест валидации пользователя с датой рождения в будущем")
@@ -63,8 +70,9 @@ class UserControllerTest {
         user.setEmail("user@example.com");
         user.setLogin("login");
         user.setBirthday(LocalDate.now().plusDays(1)); // дата в будущем
-
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        ResponseEntity<?> response = userController.createUser(user);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(((Map<String, String>) response.getBody()).get("error"));
     }
 
     @DisplayName("Тест валидации пользователя с пустым именем")
@@ -74,8 +82,8 @@ class UserControllerTest {
         user.setEmail("user@example.com");
         user.setLogin("login");
         user.setName(""); // пустое имя
-
-        userController.validateUser(user);
-        assertEquals("login", user.getName()); // имя должно замениться на логин
+        ResponseEntity<?> response = userController.createUser(user);
+        User createdUser = (User) response.getBody();
+        assertEquals("login", createdUser.getName()); // имя должно замениться на логин
     }
 }
