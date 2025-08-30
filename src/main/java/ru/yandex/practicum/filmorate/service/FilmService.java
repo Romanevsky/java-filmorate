@@ -28,7 +28,6 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность должна быть положительной.");
         }
-
         return filmStorage.create(film);
     }
 
