@@ -33,12 +33,16 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        Film existingFilm = getById(film.getId());
+        if (existingFilm == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
         return filmStorage.update(film);
     }
 
     public Film getById(int id) {
         return filmStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
+                .orElse(null); // Возвращаем null вместо исключения
     }
 
     public List<Film> getAll() {
@@ -46,10 +50,18 @@ public class FilmService {
     }
 
     public void addLike(int filmId, int userId) {
+        Film film = getById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
         filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(int filmId, int userId) {
+        Film film = getById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
         filmStorage.removeLike(filmId, userId);
     }
 

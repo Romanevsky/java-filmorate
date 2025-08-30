@@ -57,14 +57,22 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public ResponseEntity<?> addLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.addLike(id, userId);
-        return ResponseEntity.ok().build();
+        try {
+            filmService.addLike(id, userId);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public ResponseEntity<?> removeLike(@PathVariable int id, @PathVariable int userId) {
-        filmService.removeLike(id, userId);
-        return ResponseEntity.ok().build();
+        try {
+            filmService.removeLike(id, userId);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/popular")

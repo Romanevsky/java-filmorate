@@ -42,12 +42,16 @@ public class UserService {
     }
 
     public User update(User user) {
+        User existingUser = getById(user.getId());
+        if (existingUser == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
         return userStorage.update(user);
     }
 
     public User getById(int id) {
         return userStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+                .orElse(null); // Возвращаем null вместо исключения
     }
 
     public List<User> getAll() {
@@ -55,18 +59,37 @@ public class UserService {
     }
 
     public void addFriend(int userId, int friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
+        if (user == null || friend == null) {
+            throw new NotFoundException("Пользователь или друг не найдены");
+        }
         userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(int userId, int friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
+        if (user == null || friend == null) {
+            throw new NotFoundException("Пользователь или друг не найдены");
+        }
         userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getFriends(int userId) {
+        User user = getById(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
         return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(int userId, int otherId) {
+        User user = getById(userId);
+        User other = getById(otherId);
+        if (user == null || other == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
         return userStorage.getCommonFriends(userId, otherId);
     }
 }

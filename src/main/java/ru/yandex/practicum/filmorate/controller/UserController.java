@@ -57,14 +57,22 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public ResponseEntity<?> addFriend(@PathVariable int id, @PathVariable int friendId) {
-        userService.addFriend(id, friendId);
-        return ResponseEntity.ok().build();
+        try {
+            userService.addFriend(id, friendId);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public ResponseEntity<?> removeFriend(@PathVariable int id, @PathVariable int friendId) {
-        userService.removeFriend(id, friendId);
-        return ResponseEntity.ok().build();
+        try {
+            userService.removeFriend(id, friendId);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}/friends")
