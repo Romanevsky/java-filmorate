@@ -81,6 +81,8 @@ public class UserController {
     @DeleteMapping("/{id}/friends/{friendId}")
     public ResponseEntity<?> removeFriend(@PathVariable int id, @PathVariable int friendId) {
         try {
+            User user = userService.getById(id);
+            User friend = userService.getById(friendId);
             userService.removeFriend(id, friendId);
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException e) {
@@ -93,6 +95,7 @@ public class UserController {
     @GetMapping("/{id}/friends")
     public ResponseEntity<?> getFriends(@PathVariable int id) {
         try {
+            User user = userService.getById(id);
             List<User> friends = userService.getFriends(id);
             return ResponseEntity.ok(friends);
         } catch (NoSuchElementException e) {

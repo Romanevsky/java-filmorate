@@ -2,12 +2,15 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,9 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
+
+    @Autowired
+    private UserService userService;
 
     @PostMapping
     public ResponseEntity<?> createFilm(@Valid @RequestBody Film film) {
@@ -70,6 +76,8 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     public ResponseEntity<?> addLike(@PathVariable int id, @PathVariable int userId) {
         try {
+            Film film = filmService.getById(id);
+            User user = userService.getById(userId);
             filmService.addLike(id, userId);
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException e) {
