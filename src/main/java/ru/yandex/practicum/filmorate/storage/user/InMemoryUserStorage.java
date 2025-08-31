@@ -51,21 +51,22 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void removeFriend(int userId, int friendId) {
         if (!users.containsKey(userId) || !users.containsKey(friendId)) {
-            throw new NoSuchElementException("Пользователь не найден");
+            return;
         }
-        if (!friends.get(userId).contains(friendId)) {
-            throw new NoSuchElementException("Пользователь " + friendId + " не является другом пользователя " + userId);
+        Set<Integer> userFriends = friends.get(userId);
+        if (userFriends == null || !userFriends.contains(friendId)) {
+            return;
         }
-        friends.get(userId).remove(friendId);
+        userFriends.remove(friendId);
         friends.get(friendId).remove(userId);
     }
 
     @Override
     public List<User> getFriends(int userId) {
-        if (!friends.containsKey(userId)) {
+        if (!users.containsKey(userId)) {
             return Collections.emptyList();
         }
-        return friends.get(userId).stream()
+        return friends.getOrDefault(userId, Collections.emptySet()).stream()
                 .map(users::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
