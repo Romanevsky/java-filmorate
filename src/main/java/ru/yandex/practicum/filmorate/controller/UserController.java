@@ -1,100 +1,101 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Контроллер для работы с пользователями.
+ */
+@Slf4j
 @RestController
 @RequestMapping("/users")
-@Slf4j
-@RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
 
+    private final Map<Integer, User> users = new HashMap<>();
+    private int nextId = 1;
+
+    /**
+     * Создание пользователя.
+     *
+     * @param user объект пользователя
+     * @return ResponseEntity<User> или ResponseEntity<Error>
+     */
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
         try {
-            User createdUser = userService.create(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            validateUser(user);
+            user.setId(nextId++);
+            users.put(user.getId(), user);
+            log.info("Пользователь создан: {}", user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (ValidationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
+    /**
+     * Обновление пользователя.
+     *
+     * @param updatedUser обновлённый пользователь
+     * @return ResponseEntity<User> или ResponseEntity<Error>
+     */
     @PutMapping
-    public ResponseEntity<?> updateUser(@Valid @RequestBody User user) {
+    public ResponseEntity<?> updateUser(@Valid @RequestBody User updatedUser) {
         try {
-            User updatedUser = userService.update(user);
-            return ResponseEntity.ok(updatedUser);
+            validateUser(updatedUser);
+            if (users.containsKey(updatedUser.getId())) {
+                users.put(updatedUser.getId(), updatedUser);
+                log.info("Пользователь обновлён: {}", updatedUser);
+                return ResponseEntity.ok(updatedUser);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Пользователь не найден"));
         } catch (ValidationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
 
+    /**
+     * Получение всех пользователей.
+     *
+     * @return список всех пользователей
+     */
     @GetMapping
     public List<User> getAllUsers() {
-        return userService.getAll();
+        return new ArrayList<>(users.values());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable int id) {
-        try {
-            User user = userService.getById(id);
-            return ResponseEntity.ok(user);
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+    /**
+     * Валидация данных пользователя.
+     *
+     * @param user объект пользователя
+     * @throws ValidationException если данные невалидны
+     */
+    public void validateUser(User user) {
+        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+            throw new ValidationException("Email должен быть валидным и содержать символ '@'.");
         }
-    }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<?> addFriend(@PathVariable int id, @PathVariable int friendId) {
-        try {
-            userService.addFriend(id, friendId);
-            return ResponseEntity.ok().build();
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        if (user.getLogin() == null || user.getLogin().trim().isEmpty() || user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не может быть пустым и содержать пробелы.");
         }
-    }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<?> removeFriend(@PathVariable int id, @PathVariable int friendId) {
-        try {
-            userService.removeFriend(id, friendId);
-            return ResponseEntity.ok().build();
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        if (user.getName() == null || user.getName().trim().isEmpty()) {
+            user.setName(user.getLogin());
         }
-    }
 
-    @GetMapping("/{id}/friends")
-    public ResponseEntity<?> getFriends(@PathVariable int id) {
-        try {
-            List<User> friends = userService.getFriends(id);
-            return ResponseEntity.ok(friends);
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public ResponseEntity<?> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        try {
-            List<User> commonFriends = userService.getCommonFriends(id, otherId);
-            return ResponseEntity.ok(commonFriends);
-        } catch (NotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем.");
         }
     }
 }

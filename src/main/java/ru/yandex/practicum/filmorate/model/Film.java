@@ -26,5 +26,4 @@ public class Film {
 
     @Min(value = 1, message = "Продолжительность должна быть положительной.")
     private int duration;
-
 }

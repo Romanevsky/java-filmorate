@@ -3,51 +3,79 @@ package ru.yandex.practicum.filmorate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
-    private final UserStorage userStorage = new InMemoryUserStorage();
-    private final UserService userService = new UserService(userStorage);
-    private final UserController userController = new UserController(userService);
 
-    @DisplayName("Тест добавления друга")
+    private final UserController userController = new UserController();
+
+    @DisplayName("Тест валидации пользователя")
     @Test
-    void testAddFriend() {
-        // Создаем пользователей
-        User user1 = new User();
-        user1.setEmail("user1@example.com");
-        user1.setLogin("user1");
-        user1.setName("Пользователь 1");
-        user1.setBirthday(LocalDate.of(1990, 1, 1));
+    void testValidUser() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setLogin("login");
+        user.setName("Имя");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
 
-        User user2 = new User();
-        user2.setEmail("user2@example.com");
-        user2.setLogin("user2");
-        user2.setName("Пользователь 2");
-        user2.setBirthday(LocalDate.of(1990, 1, 1));
+        assertDoesNotThrow(() -> userController.validateUser(user));
+    }
 
-        User createdUser1 = userService.create(user1);
-        User createdUser2 = userService.create(user2);
+    @DisplayName("Тест валидации пользователя с невалидным email")
+    @Test
+    void testInvalidEmail() {
+        User user = new User();
+        user.setEmail("invalid-email");
+        user.setLogin("login");
 
-        // Добавляем друга
-        assertDoesNotThrow(() -> userController.addFriend(createdUser1.getId(), createdUser2.getId()));
+        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+    }
 
-        // Проверяем, что друг был добавлен
-        List<User> friends1 = userService.getFriends(createdUser1.getId());
-        List<User> friends2 = userService.getFriends(createdUser2.getId());
+    @DisplayName("Тест валидации пользователя с пустым логином")
+    @Test
+    void testEmptyLogin() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setLogin(""); // или null
 
-        assertEquals(1, friends1.size());
-        assertEquals(createdUser2.getId(), friends1.get(0).getId());
+        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+    }
 
-        assertEquals(1, friends2.size());
+    @DisplayName("Тест валидации пользователя с логином, содержащим пробел")
+    @Test
+    void testLoginWithSpace() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setLogin("log in"); // содержит пробел
+
+        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+    }
+
+    @DisplayName("Тест валидации пользователя с датой рождения в будущем")
+    @Test
+    void testFutureBirthday() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setLogin("login");
+        user.setBirthday(LocalDate.now().plusDays(1)); // дата в будущем
+
+        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+    }
+
+    @DisplayName("Тест валидации пользователя с пустым именем")
+    @Test
+    void testEmptyName() {
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setLogin("login");
+        user.setName(""); // пустое имя
+
+        userController.validateUser(user);
+        assertEquals("login", user.getName()); // имя должно замениться на логин
     }
 }
