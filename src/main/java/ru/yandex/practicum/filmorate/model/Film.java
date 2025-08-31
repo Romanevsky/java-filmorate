@@ -7,10 +7,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * Модель данных Film.
- */
 @Data
 public class Film {
     private int id;
@@ -26,4 +25,6 @@ public class Film {
 
     @Min(value = 1, message = "Продолжительность должна быть положительной.")
     private int duration;
+
+    private Set<Integer> likes = new HashSet<>();
 }
