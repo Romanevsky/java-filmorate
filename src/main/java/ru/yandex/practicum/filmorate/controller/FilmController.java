@@ -27,7 +27,8 @@ public class FilmController {
             Film createdFilm = filmService.create(film);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
         } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage())); // {{ edit_2 }}
         }
     }
 
