@@ -1,101 +1,59 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
 
 /**
  * Контроллер для работы с пользователями.
  */
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
+    private final UserService userService;
 
-    private final Map<Integer, User> users = new HashMap<>();
-    private int nextId = 1;
-
-    /**
-     * Создание пользователя.
-     *
-     * @param user объект пользователя
-     * @return ResponseEntity<User> или ResponseEntity<Error>
-     */
-    @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        try {
-            validateUser(user);
-            user.setId(nextId++);
-            users.put(user.getId(), user);
-            log.info("Пользователь создан: {}", user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
-     * Обновление пользователя.
-     *
-     * @param updatedUser обновлённый пользователь
-     * @return ResponseEntity<User> или ResponseEntity<Error>
-     */
-    @PutMapping
-    public ResponseEntity<?> updateUser(@Valid @RequestBody User updatedUser) {
-        try {
-            validateUser(updatedUser);
-            if (users.containsKey(updatedUser.getId())) {
-                users.put(updatedUser.getId(), updatedUser);
-                log.info("Пользователь обновлён: {}", updatedUser);
-                return ResponseEntity.ok(updatedUser);
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Пользователь не найден"));
-        } catch (ValidationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
-     * Получение всех пользователей.
-     *
-     * @return список всех пользователей
-     */
     @GetMapping
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public Collection<User> findAll() {
+        return userService.findAll();
     }
 
-    /**
-     * Валидация данных пользователя.
-     *
-     * @param user объект пользователя
-     * @throws ValidationException если данные невалидны
-     */
-    public void validateUser(User user) {
-        if (user.getEmail() == null || !user.getEmail().contains("@")) {
-            throw new ValidationException("Email должен быть валидным и содержать символ '@'.");
-        }
+    @PostMapping
+    public User create(@Valid @RequestBody User user) {
+        return userService.create(user);
+    }
 
-        if (user.getLogin() == null || user.getLogin().trim().isEmpty() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы.");
-        }
+    @PutMapping
+    public User update(@Valid @RequestBody User newUser) {
+        return userService.update(newUser);
+    }
 
-        if (user.getName() == null || user.getName().trim().isEmpty()) {
-            user.setName(user.getLogin());
-        }
+    @GetMapping("/{id}")
+    public User findById(@PathVariable Long id) {
+        return userService.findById(id);
+    }
 
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем.");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public Collection<User> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public Collection<User> deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.deleteFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> findFriends(@PathVariable Long id) {
+        return userService.findFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> findCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.findCommonFriends(id, otherId);
     }
 }
