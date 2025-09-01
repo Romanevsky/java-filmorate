@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -11,6 +13,7 @@ import java.util.Collection;
 /**
  * Контроллер для работы с фильмами.
  */
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/films")
@@ -33,17 +36,23 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable Long id) {
+    public Film findById(@PathVariable @Positive Long id) {  // <-- Добавлено: @Positive
         return filmService.findById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public Film addLike(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long userId
+    ) {
         return filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+    public Film deleteLike(
+            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long userId
+    ) {
         return filmService.deleteLike(id, userId);
     }
 
