@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,4 +24,10 @@ public class User {
     private String name;
     private LocalDate birthday;
     private Set<Long> friendIds = new HashSet<>();
+    private Map<Long, FriendStatus> friendIdsWithStatus = new HashMap<>();
+
+    public enum FriendStatus {
+        PENDING,
+        CONFIRMED
+    }
 }
