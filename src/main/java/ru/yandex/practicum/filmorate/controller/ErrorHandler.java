@@ -46,6 +46,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INSUFFICIENT_STORAGE)
     public ErrorResponse handleInternalServer(final InternalServerException e) {
+        log.error("Внутренняя ошибка сервера: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 }
