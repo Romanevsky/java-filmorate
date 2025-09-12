@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
@@ -40,5 +41,12 @@ public class ErrorHandler {
     public ErrorResponse handleException(final Exception e) {
         log.error("Произошла непредвиденная ошибка: {}", e.getMessage());
         return new ErrorResponse("Произошла непредвиденная ошибка.");
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INSUFFICIENT_STORAGE)
+    public ErrorResponse handleInternalServer(final InternalServerException e) {
+        log.error("Внутренняя ошибка сервера: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
     }
 }
